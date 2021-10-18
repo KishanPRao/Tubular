@@ -177,6 +177,7 @@ public final class VideoDetailFragment
     private boolean showRelatedItems;
     private boolean showDescription;
     private boolean showSponsorBlock;
+    private boolean ignoreQueue;
     private String selectedTabTag;
     @AttrRes
     @NonNull
@@ -335,6 +336,7 @@ public final class VideoDetailFragment
         showRelatedItems = prefs.getBoolean(getString(R.string.show_next_video_key), true);
         showDescription = prefs.getBoolean(getString(R.string.show_description_key), true);
         showSponsorBlock = prefs.getBoolean(getString(R.string.sponsor_block_enable_key), false);
+        ignoreQueue = prefs.getBoolean(getString(R.string.enable_ignore_main_queue_key), false);
         selectedTabTag = prefs.getString(
                 getString(R.string.stream_info_selected_tab_key), COMMENTS_TAB_TAG);
         prefs.registerOnSharedPreferenceChangeListener(preferenceChangeListener);
@@ -726,6 +728,11 @@ public final class VideoDetailFragment
     public boolean onBackPressed() {
         if (DEBUG) {
             Log.d(TAG, "onBackPressed() called");
+        }
+
+        // when queue should be ignored, directly skip checks and let MainActivity handle everything
+        if (ignoreQueue) {
+            return false;
         }
 
         // If we are in fullscreen mode just exit from it via first back press

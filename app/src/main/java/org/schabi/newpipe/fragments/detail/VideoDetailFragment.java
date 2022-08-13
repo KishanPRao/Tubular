@@ -336,7 +336,10 @@ public final class VideoDetailFragment
         showRelatedItems = prefs.getBoolean(getString(R.string.show_next_video_key), true);
         showDescription = prefs.getBoolean(getString(R.string.show_description_key), true);
         showSponsorBlock = prefs.getBoolean(getString(R.string.sponsor_block_enable_key), false);
-        ignoreQueue = prefs.getBoolean(getString(R.string.enable_ignore_main_queue_key), false);
+        ignoreQueue = prefs.getBoolean(
+                getString(R.string.enable_ignore_backstack_key),
+                DeviceUtils.isTv(activity)
+        );
         selectedTabTag = prefs.getString(
                 getString(R.string.stream_info_selected_tab_key), COMMENTS_TAB_TAG);
         prefs.registerOnSharedPreferenceChangeListener(preferenceChangeListener);

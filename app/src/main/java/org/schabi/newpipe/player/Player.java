@@ -273,6 +273,7 @@ public final class Player implements PlaybackListener, Listener {
     private SponsorBlockMode sponsorBlockMode = SponsorBlockMode.DISABLED;
     private SponsorBlockSegment lastSegment;
     private boolean autoSkipGracePeriod = false;
+    private boolean resetSpeedMusic = true;
 
     private final SharedPreferences.OnSharedPreferenceChangeListener preferenceChangeListener;
 
@@ -1449,6 +1450,10 @@ public final class Player implements PlaybackListener, Listener {
                 if (previousInfo == null || !previousInfo.getUrl().equals(info.getUrl())) {
                     // only update with the new stream info if it has actually changed
                     updateMetadataWith(info);
+                    if (resetSpeedMusic && info.getCategory().equals("Music")) {
+                        simpleExoPlayer.setPlaybackParameters(
+                                new PlaybackParameters(1.0f, getPlaybackPitch()));
+                    }
                 } else if (previousAudioTrack == null
                         || tag.getMaybeAudioTrack()
                         .map(t -> t.getSelectedAudioStreamIndex()

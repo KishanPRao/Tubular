@@ -231,6 +231,8 @@ public abstract class BaseListInfoFragment<I extends InfoItem, L extends ListInf
             if (!result.getRelatedItems().isEmpty()) {
                 infoListAdapter.addInfoItemList(result.getRelatedItems());
                 showListFooter(hasMoreItems());
+            } else if (hasMoreItems()) {
+                loadMoreItems();
             } else {
                 infoListAdapter.clearStreamItemList();
                 showEmptyState();
@@ -244,7 +246,7 @@ public abstract class BaseListInfoFragment<I extends InfoItem, L extends ListInf
             errors.removeIf(ContentNotSupportedException.class::isInstance);
 
             if (!errors.isEmpty()) {
-                dynamicallyShowErrorPanelOrSnackbar(new ErrorInfo(result.getErrors(),
+                dynamicallyShowErrorPanelOrSnackbar(new ErrorInfo(errors,
                         errorUserAction, "Start loading: " + url, serviceId));
             }
         }

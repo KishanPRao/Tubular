@@ -72,8 +72,8 @@ import org.schabi.newpipe.error.ErrorUtil;
 import org.schabi.newpipe.error.ReCaptchaActivity;
 import org.schabi.newpipe.error.UserAction;
 import org.schabi.newpipe.extractor.Image;
-import org.schabi.newpipe.extractor.InfoItem;
 import org.schabi.newpipe.extractor.NewPipe;
+import org.schabi.newpipe.extractor.comments.CommentsInfoItem;
 import org.schabi.newpipe.extractor.exceptions.ContentNotSupportedException;
 import org.schabi.newpipe.extractor.exceptions.ExtractionException;
 import org.schabi.newpipe.extractor.sponsorblock.SponsorBlockAction;
@@ -113,6 +113,7 @@ import org.schabi.newpipe.player.ui.VideoPlayerUi;
 import org.schabi.newpipe.util.Constants;
 import org.schabi.newpipe.util.DeviceUtils;
 import org.schabi.newpipe.util.ExtractorHelper;
+import org.schabi.newpipe.util.InfoCache;
 import org.schabi.newpipe.util.ListHelper;
 import org.schabi.newpipe.util.Localization;
 import org.schabi.newpipe.util.NavigationHelper;
@@ -525,7 +526,7 @@ public final class VideoDetailFragment
 
                 // commit previous pending changes to database
                 if (fragment instanceof LocalPlaylistFragment) {
-                    ((LocalPlaylistFragment) fragment).commitChanges();
+                    ((LocalPlaylistFragment) fragment).saveImmediate();
                 } else if (fragment instanceof MainFragment) {
                     ((MainFragment) fragment).commitPlaylistTabs();
                 }
@@ -1090,6 +1091,20 @@ public final class VideoDetailFragment
         updateTabLayoutVisibility();
     }
 
+    public void scrollToComment(final CommentsInfoItem comment) {
+        final int commentsTabPos = pageAdapter.getItemPositionByTitle(COMMENTS_TAB_TAG);
+        final Fragment fragment = pageAdapter.getItem(commentsTabPos);
+        if (!(fragment instanceof CommentsFragment)) {
+            return;
+        }
+
+        // unexpand the app bar only if scrolling to the comment succeeded
+        if (((CommentsFragment) fragment).scrollToComment(comment)) {
+            binding.appBarLayout.setExpanded(false, false);
+            binding.viewPager.setCurrentItem(commentsTabPos, false);
+        }
+    }
+
     /*//////////////////////////////////////////////////////////////////////////
     // Play Utils
     //////////////////////////////////////////////////////////////////////////*/
@@ -1511,7 +1526,7 @@ public final class VideoDetailFragment
         super.showLoading();
 
         //if data is already cached, transition from VISIBLE -> INVISIBLE -> VISIBLE is not required
-        if (!ExtractorHelper.isCached(serviceId, url, InfoItem.InfoType.STREAM)) {
+        if (!ExtractorHelper.isCached(serviceId, url, InfoCache.Type.STREAM)) {
             binding.detailContentRootHiding.setVisibility(View.INVISIBLE);
         }
 
@@ -1614,8 +1629,23 @@ public final class VideoDetailFragment
 
             // RYD override: dislikes
             if (rydInfo != null && isRydEnabled) {
-                binding.detailThumbsDownCountView.setText(Localization
-                        .shortCount(activity, rydInfo.dislikes));
+                final boolean showAsPercentage = prefs.getBoolean(
+                        activity.getString(
+                                R.string.return_youtube_dislike_show_dislikes_as_percentage_key),
+                        false);
+
+                final String dislikeText;
+
+                if (showAsPercentage) {
+                    final double percentage =
+                            (double) rydInfo.dislikes / (rydInfo.likes + rydInfo.dislikes) * 100.0;
+
+                    dislikeText = Localization.localizePercentage(percentage);
+                } else {
+                    dislikeText = Localization.shortCount(activity, rydInfo.dislikes);
+                }
+
+                binding.detailThumbsDownCountView.setText(dislikeText);
                 binding.detailThumbsDownCountView.setVisibility(View.VISIBLE);
                 binding.detailThumbsDownImgView.setVisibility(View.VISIBLE);
             }
